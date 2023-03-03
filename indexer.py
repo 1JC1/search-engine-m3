@@ -1,8 +1,12 @@
-import json, os, re, sys, bisect
+import json, os, re, sys, bisect, psutil
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
+
+"""
+psutil.virtual_memory()[2]
+"""
 
 main_index = dict()
 url_index = dict()
