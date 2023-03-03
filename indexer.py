@@ -1,4 +1,4 @@
-import json, os, re, sys, bisect, psutil
+import json, os, re, sys, bisect, psutil, math
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
@@ -82,11 +82,15 @@ def indexer():
                     for stem, post in file_index.items():
                         if stem not in main_index:
                             main_index[stem] = []
+                        post.set_tfWeight(1 + math.log10(post.get_freq()))
                         bisect.insort(main_index[stem], post)
                                 
                     url_index[docID] = data['url']
                         
                     docID += 1
+                    
+                    # if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
+                    
 
             print(f'Directory {dir} done\n')
             # break
