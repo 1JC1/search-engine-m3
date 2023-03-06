@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-import defaultdict
+from collections import defaultdict
 
 main_index = dict()
 url_index = dict()
@@ -43,7 +43,6 @@ def tags(soup):
     #bold
     for bolded in soup.findall('bold'):
         tokenize(bolded, 'bold')
-    
     #emphasized
     for em in soup.findall('em'):
         tokenize(em, 'em')
