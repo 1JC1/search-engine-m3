@@ -87,6 +87,7 @@ def dump():
                 merged_list = sorted(disk_postings + main_postings)
                 newf.write(f"{main_token}|{merged_list}\n")
                 p += 1
+                line = disk_index[curr].readline()
                 if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
                     newf.close()
                     disk_index[curr].close()
@@ -100,7 +101,6 @@ def dump():
                             curr = "num"
                         
                         newf = open(f"new_{curr}.txt", "w")
-                line = disk_index[curr].readline()
                 
             elif main_token < disk_token:
                 newf.write(f"{main_token}|{main_postings}\n")
