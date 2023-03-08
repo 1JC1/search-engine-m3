@@ -26,7 +26,7 @@ for char in ascii_lowercase:
     disk_index[char] = f
     
 f = open(f"num.txt", "w+")
-disk_index[char] = f
+disk_index["num"] = f
     
 os.chdir("../")
 
