@@ -3,19 +3,126 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
+from string import ascii_lowercase
 
 """
 psutil.virtual_memory()[2]
 """
 
 main_index = dict()
+disk_index = dict()
+index_of_index = dict()
 url_index = dict()
+
+newpath = "file_index"
+
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
+
+os.chdir(newpath)
+
+for char in ascii_lowercase:
+    f = open(f"{char}.txt", "r")
+    disk_index[char] = f
+    
+os.chdir("../")
 
 def default(obj):
     '''Encoder object to serialize Postings class as a JSON object'''
     if hasattr(obj, 'to_json'):
         return obj.to_json()
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+
+def dump():
+    global main_index
+    global disk_index
+    
+    sorted_dict_list = sorted(main_index.keys())
+    curr = sorted_dict_list[0][0]
+    line = disk_index[curr].readline()
+    p = 0
+
+    newf = open(f"new_{curr}.txt", "w")
+
+    while line != "" or p < len(sorted_dict_list):
+        
+        if line == "" and p < len(sorted_dict_list):
+            main_token = sorted_dict_list[p]
+            main_postings = main_index[main_token]
+            newf.write(f"{main_token}|{main_postings}\n")
+            p += 1
+            if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
+                newf.close()
+                disk_index[curr].close()
+                os.remove(f"{curr}.txt")
+                os.rename(f"new_{curr}.txt", f"{curr}.txt")
+                disk_index[curr] = open(f"{curr}.txt", "r")
+                if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
+                    curr = sorted_dict_list[p][0]
+                    newf = open(f"new_{curr}.txt", "w")
+            
+        elif line != "" and p == len(sorted_dict_list):
+            line_info = line.strip().split("|")
+            disk_token = line_info[0]
+            disk_postings = eval(line_info[1])
+            newf.write(f"{disk_token}|{disk_postings}\n")
+            line = disk_index[curr].readline()
+            
+        elif line != "" and p < len(sorted_dict_list):
+            main_token = sorted_dict_list[p]
+            main_postings = main_index[main_token]
+            
+            line_info = line.strip().split("|")
+            disk_token = line_info[0]
+            disk_postings = eval(line_info[1])
+            
+            if main_token == disk_token:
+                merged_list = disk_postings + main_postings # merge
+                newf.write(f"{main_token}|{merged_list}\n")
+                p += 1
+                if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
+                    newf.close()
+                    disk_index[curr].close()
+                    os.remove(f"{curr}.txt")
+                    os.rename(f"new_{curr}.txt", f"{curr}.txt")
+                    disk_index[curr] = open(f"{curr}.txt", "r")
+                    if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
+                        curr = sorted_dict_list[p][0]
+                        newf = open(f"new_{curr}.txt", "w")
+                line = disk_index[curr].readline()
+                
+            elif main_token < disk_token:
+                newf.write(f"{main_token}|{main_postings}\n")
+                p += 1
+                if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
+                    newf.close()
+                    disk_index[curr].close()
+                    os.remove(f"{curr}.txt")
+                    os.rename(f"new_{curr}.txt", f"{curr}.txt")
+                    disk_index[curr] = open(f"{curr}.txt", "r")
+                    if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
+                        curr = sorted_dict_list[p][0]
+                        newf = open(f"new_{curr}.txt", "w")
+                        
+            elif main_token > disk_token:
+                newf.write(f"{disk_token}|{disk_postings}\n")
+                line = disk_index[curr].readline()
+    
+    main_index = dict()
+
+def create_index_of_index():
+    global index_of_index
+    
+    for char in ascii_lowercase:
+        line = disk_index[char].readline()
+        pos = 0
+        
+        while line != "":
+            line_info = line.strip().split("|")
+            token = line_info[0]
+            index_of_index[token] = pos
+            pos += len(line)
+            line = disk_index[char].readline()
 
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
@@ -29,6 +136,7 @@ def indexer():
 
     # changing into the DEV directory and opening it
     os.chdir("../DEV")
+    
     for dir in os.listdir():
         if dir != '.DS_Store':
             print(f'Directory {dir} started')
@@ -89,8 +197,8 @@ def indexer():
                         
                     docID += 1
                     
-                    # if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
-                    
+                    if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
+                        dump()
 
             print(f'Directory {dir} done\n')
             # break
@@ -99,14 +207,15 @@ def indexer():
     os.chdir("../inverted-index-m1")
     
     # dumping main_index into a json
-    with open("main_index.json", 'w') as f:
-        json.dump(main_index, f, default=default)
-        print("File index made")
+    # with open("main_index.json", 'w') as f:
+    #     json.dump(main_index, f, default=default)
+    #     print("File index made")
+    dump()
     
-    with open("url_index.json", "w") as f:
-        json.dump(url_index, f, default=default)
-        print("URL index made")
-    #
+    # with open("url_index.json", "w") as f:
+    #     json.dump(url_index, f, default=default)
+    #     print("URL index made")
+    
     # print(f"Number of documents: {docID + 1}")
     # print(f"Number of tokens: {len(main_index)}")
     # print(f"Size of index: {sys.getsizeof(main_index)}")
