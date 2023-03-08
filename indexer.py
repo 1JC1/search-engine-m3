@@ -213,13 +213,15 @@ def indexer():
                     docID += 1
                     
                     if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
+                        os.chdir("../search-engine-m3")
                         dump()
+                        os.chdir("../DEV")
 
             print(f'Directory {dir} done\n')
             # break
 
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
-    os.chdir("../inverted-index-m1")
+    os.chdir("../search-engine-m3")
     
     # dumping main_index into a json
     # with open("main_index.json", 'w') as f:
