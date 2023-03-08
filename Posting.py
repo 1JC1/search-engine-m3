@@ -5,7 +5,7 @@ class Posting:
         self.token = inputToken
         self.freq = inputFreq
         self.tfWeight = inputWeight
-        self.positionList = inputList
+        self.positionList = inputList[:]
         
     def get_docID(self):
         return self.docID
