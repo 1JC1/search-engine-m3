@@ -60,6 +60,10 @@ def dump():
                 disk_index[curr] = open(f"{curr}.txt", "r")
                 if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
                     curr = sorted_dict_list[p][0]
+                    
+                    if curr not in ascii_lowercase:
+                        curr = "num"
+                    
                     newf = open(f"new_{curr}.txt", "w")
             
         elif line != "" and p == len(sorted_dict_list):
@@ -89,6 +93,10 @@ def dump():
                     disk_index[curr] = open(f"{curr}.txt", "r")
                     if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
                         curr = sorted_dict_list[p][0]
+                        
+                        if curr not in ascii_lowercase:
+                            curr = "num"
+                        
                         newf = open(f"new_{curr}.txt", "w")
                 line = disk_index[curr].readline()
                 
@@ -103,6 +111,10 @@ def dump():
                     disk_index[curr] = open(f"{curr}.txt", "r")
                     if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
                         curr = sorted_dict_list[p][0]
+                        
+                        if curr not in ascii_lowercase:
+                            curr = "num"
+                        
                         newf = open(f"new_{curr}.txt", "w")
                         
             elif main_token > disk_token:
