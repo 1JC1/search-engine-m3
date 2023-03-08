@@ -22,7 +22,7 @@ if not os.path.exists(newpath):
 os.chdir(newpath)
 
 for char in ascii_lowercase:
-    f = open(f"{char}.txt", "W+")
+    f = open(f"{char}.txt", "w+")
     disk_index[char] = f
     
 f = open(f"num.txt", "w+")
