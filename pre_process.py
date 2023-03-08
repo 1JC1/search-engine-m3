@@ -7,25 +7,27 @@ from collections import defaultdict
 # function to find docs that contain more than one (see lecture 22)
 
 def compare_tf_idf(query: str, union_docs: list('Postings'), doc_vec_sizes: dict(), total_doc_count: int, search_num: int):
-    query_tokens = set(query.split())
+    # Compares tf-idf scores between query and document terms using cosine similarity and returns top K docIDs with their
+    # scores, where K is specified by the search_num argument.
     
     query_weights = defaultdict(int)
     scores = defaultdict(int)
     
+    query_tokens = set(query.split())
+    
     for token in query_tokens:
-        q_tf_wt = 1 + log(query.count(token), base = 10)
-        q_idf = log((total_doc_count / len(main_index[token])), base = 10) # change to file seeking
+        q_tf_wt = 1 + log(query.count(token), base = 10) # weighted tf for query
+        q_idf = log((total_doc_count / len(main_index[token])), base = 10) # idf for query # change main_index to file seeking? or other structure
         
-        query_wt = q_tf_wt * q_idf
+        query_wt = q_tf_wt * q_idf # non-normalized query weight
         query_weights[token] = query_wt
         
         for posting in union_docs:
             scores[posting.get_docID()] = query_wt * posting.get_tf()
              
-    query_vec_size = sqrt(sum([w**2 for w in query_weights])) # used in cosine normalization
+    query_vec_size = sqrt(sum([w**2 for w in query_weights]))
     
-    
-    for docID in scores:
+    for docID in scores: # doing cosine normalization on all query-document scores
         scores[docID] = scores[docID] / (query_vec_size * doc_vec_sizes[docID])
     
-    return scores.values().sort(scores[1], reverse = True)[0:search_num]
+    return scores.values().sort(scores[1], reverse = True)[0:search_num] # return top K documents
