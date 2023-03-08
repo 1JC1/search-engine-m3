@@ -170,12 +170,10 @@ def indexer():
                                 # creating a Posting object to easily access docID and frequencies of tokens
                                 # & putting the Posting objects into the main_index
                                 if stem not in file_index:
-                                    # main_index[stem][docID] = Posting()
                                     file_index[stem] = Posting(docID, stem)
-                                else:
-                                    # main_index[stem][docID].increment_freq()
-                                    file_index[stem].increment_freq()
-                                    file_index[stem].add_position(wordPosition)
+                                    
+                                file_index[stem].increment_freq()
+                                file_index[stem].add_position(wordPosition)
                                 
                                 wordPosition += 1
                 
