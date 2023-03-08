@@ -52,8 +52,3 @@ class Posting:
     
     def __repr__(self) -> str:
         return self.__str__()
-    
-    # allows use of json.dump into main_index.json
-    def to_json(self):
-        # return json.dumps(dict(self), ensure_ascii=False)
-        return json.dumps(self, default=lambda o: o.__dict__)
