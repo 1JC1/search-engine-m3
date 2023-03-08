@@ -22,8 +22,11 @@ if not os.path.exists(newpath):
 os.chdir(newpath)
 
 for char in ascii_lowercase:
-    f = open(f"{char}.txt", "r+")
+    f = open(f"{char}.txt", "W+")
     disk_index[char] = f
+    
+f = open(f"num.txt", "w+")
+disk_index[char] = f
     
 os.chdir("../")
 
@@ -33,6 +36,10 @@ def dump():
     
     sorted_dict_list = sorted(main_index.keys())
     curr = sorted_dict_list[0][0]
+    
+    if curr not in ascii_lowercase:
+        curr = "num"
+    
     line = disk_index[curr].readline()
     p = 0
 
@@ -71,7 +78,7 @@ def dump():
             disk_postings = eval(line_info[1])
             
             if main_token == disk_token:
-                merged_list = disk_postings + main_postings # merge
+                merged_list = sorted(disk_postings + main_postings)
                 newf.write(f"{main_token}|{merged_list}\n")
                 p += 1
                 if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
