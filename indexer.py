@@ -7,7 +7,7 @@ from collections import defaultdict
 
 main_index = dict()
 url_index = dict()
-token_nested_dict = dict(defaultdict(int))
+anchor_dict = dict()
 
 def default(obj):
     '''Encoder object to serialize Postings class as a JSON object'''
@@ -15,9 +15,10 @@ def default(obj):
         return obj.to_json()
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
-def tokenize(soup, tag):
+def tokenize(soup, tag, token_nested_dict, count):
     '''Used to tokenize and stem HTML tags for search revelance; puts relevant tokens into a 
     dictionary: token_nested_dict'''
+    # getting text to make the tag readable 
     tokens = word_tokenize(soup.get_text())
     # tokenizing alphanumerically
     for token in tokens:
@@ -26,26 +27,34 @@ def tokenize(soup, tag):
         # only allowing alphanumeric characters to be stemmed
         if len(alphanum) > 0:
             stem = stemmer.stem(alphanum)
-            token_nested_dict[token][tag] = +1
+            token_nested_dict[token][tag] += count
 
-def tags(soup):
-    '''Searching for tags in text and calling tokenize() to categorize tokens into a dict'''
+def tags(soup, token_nested_dict):
+    '''Searching for tags in text, creating a list of the tags, and calling tokenize() 
+    to categorize tokenize each tag into a dict'''
     #title --> used to display in ui
     for title in soup.findall('title'):
-        tokenize(title, 'title')
+        tokenize(title, 'title', token_nested_dict, 6)
     #h1, h2/h3, h4/h5/h6
-    for num in str(range (1, 7)):
+    for num in str(range (0, 6)):
         for head in soup.findall('h' + num):
-            tokenize(head, 'h' + num)
+            tokenize(head, 'h' + str(num + 1), token_nested_dict, 6 - num)
     #strong
     for strong in soup.findall('strong'):
-        tokenize(strong, 'strong')
+        tokenize(strong, 'strong', token_nested_dict, 6)
     #bold
     for bolded in soup.findall('bold'):
-        tokenize(bolded, 'bold')
+        tokenize(bolded, 'bold', token_nested_dict, 4)
     #emphasized
     for em in soup.findall('em'):
-        tokenize(em, 'em')
+        tokenize(em, 'em', token_nested_dict, )
+    #italics
+    for italics in soup.findall('i'):
+        tokenize(italics, 'i', token_nested_dict, )
+    #anchor tags
+    for anchor in soup.findall('a', href=True): # only gets the URL
+        anchor_dict[anchor]
+        tokenize(anchor, 'a')
     
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
@@ -69,6 +78,7 @@ def indexer():
                 # opening each file in subdirectories and parsing data
                 if os.path.splitext(file)[1] == '.json':
                     file_index = dict()
+                    token_nested_dict = dict(defaultdict(int))
                     wordPosition = 0
                     
                     with open(dir + '/' + file) as f:
@@ -84,8 +94,8 @@ def indexer():
                         # using BeautifulSoup to parse data
                         soup = BeautifulSoup(data['content'].encode(data['encoding']), 'lxml', from_encoding = data['encoding'])
 
-                        #finding tags in html
-                        tags(soup)
+                        # finding tags in html
+                        tags(soup, token_nested_dict)
                         tokens = word_tokenize(soup.get_text())
                         
                         # tokenizing alphanumerically
@@ -132,3 +142,4 @@ def indexer():
     with open("url_index.json", "w") as f:
         json.dump(url_index, f, default=default)
         print("URL index made")
+
