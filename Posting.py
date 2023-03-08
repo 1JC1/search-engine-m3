@@ -1,4 +1,3 @@
-import json
 class Posting:
     '''class object for keeping track of instances in the index'''
     def __init__(self, inputDocID = None, inputToken = None, inputFreq = 0, inputWeight = None, inputList = []) -> None:
