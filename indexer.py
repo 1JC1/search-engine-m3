@@ -235,3 +235,6 @@ def indexer():
     # print(main_index)
     # print('url index')
     # print(url_index)  
+    
+if __name__ == "__main__":
+    indexer()
