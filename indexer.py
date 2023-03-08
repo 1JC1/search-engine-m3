@@ -34,6 +34,8 @@ def dump():
     global main_index
     global disk_index
     
+    os.chdir(newpath)
+    
     sorted_dict_list = sorted(main_index.keys())
     curr = sorted_dict_list[0][0]
     
@@ -120,6 +122,8 @@ def dump():
             elif main_token > disk_token:
                 newf.write(f"{disk_token}|{disk_postings}\n")
                 line = disk_index[curr].readline()
+    
+    os.chdir("../")
     
     main_index = dict()
 
