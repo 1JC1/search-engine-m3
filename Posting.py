@@ -47,7 +47,7 @@ class Posting:
         return hash((self.docID, self.token))
 
     def __str__(self) -> str:
-        return f"Posting(inputDocID={self.docID}, inputToken={self.token}, inputFreq={self.freq}, inputList={self.positionList})"
+        return f"Posting(inputDocID={self.docID}, inputToken={self.token}, inputFreq={self.freq}, inputWeight = {self.tfWeight}, inputList={self.positionList})"
     
     def __repr__(self) -> str:
         return self.__str__()
