@@ -237,7 +237,8 @@ def indexer():
     # with open("main_index.json", 'w') as f:
     #     json.dump(main_index, f, default=default)
     #     print("File index made")
-    dump()
+    if len(main_index) > 0:
+        dump()
     
     # with open("url_index.json", "w") as f:
     #     json.dump(url_index, f, default=default)
