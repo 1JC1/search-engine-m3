@@ -140,6 +140,16 @@ def create_index_of_index():
             index_of_index[token] = pos
             pos += len(line)
             line = disk_index[char].readline()
+            
+    line = disk_index["num"].readline()
+    pos = 0
+    
+    while line != "":
+        line_info = line.strip().split("|")
+        token = line_info[0]
+        index_of_index[token] = pos
+        pos += len(line)
+        line = disk_index["num"].readline()
 
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
