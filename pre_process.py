@@ -1,30 +1,35 @@
-from math import log
+from math import log, sqrt
 from collections import defaultdict
 
-# weighted term frequency (tf) stored in Posting objects
-# document frequency (df) is length of Posting list
-# term frequency (tf) is 1 + log(main_index[term][i].get_freq(), base = 10
+# using the lnc.ltc weighting scheme and the example from lecture 21
 
-def calc_tf_idf(total_doc_count: int, df: int, tf: int):
-    # Calculates tf-idf score for individual token 
-    idf = log(total_doc_count / df, base = 10) # log10(N/df)
+# instead of comparing tf-idf for any doc containing at least one query term, should set separate
+# function to find docs that contain more than one (see lecture 22)
 
-    return tf * idf 
-
-# note: have to account for repeating tokens (ex. ics ics)
-def compare_tf_idf(query_tokens: list[str], total_doc_count: int, search_num):
+def compare_tf_idf(query: str, total_doc_count: int):
+    query_tokens = set(query.split())
+    
+    query_weights = defaultdict(int)
     scores = defaultdict(int)
     
     for token in query_tokens:
-        token_postings = main_index[token]
-        query_weight = calc_tf_idf(total_doc_count, len(token_postings), 1 + log(query_tokens.count(token)))
+        token_postings = main_index[token] # change to file seeking
         
-        for posting in token_postings:
-            doc_weight = calc_tf_idf(total_doc_count, len(token_postings), posting.get_tf()) 
-            # replace get_tf with correct method name; maybe change to just tf and cosine normalization
-            scores[posting.get_docID()] += query_weight * doc_weight
-            
-    for docID in scores:
-        scores[docID] = scores[docID] # / length[docID] # change once we confirm what length is
+        q_tf_wt = 1 + log(query.count(token), base = 10)
+        q_idf = log((total_doc_count / len(token_postings)), base = 10)
+        
+        query_wt = q_tf_wt * q_idf
+        query_weights[token] = query_wt
+        
+    query_vector_size = sqrt(sum([w**2 for w in query_weights])) # used in cosine normalization
     
-    return scores.values().sort(scores[1])[0:search_num] # assuming we want smaller angles
+    for token in query_weights:
+        query_weights[token] = query_weights[token] / query_vector_size
+    
+    for token in query_tokens:
+        for posting in main_index[token]:
+            doc_weight = posting.get_tf() / doc_vector_size # replace with actual way to get document vector size
+            scores[posting.get_docID()] += query_weights[token] * doc_weight
+        
+    
+    return scores.values().sort(scores[1], reverse = True)[0:search_num]
