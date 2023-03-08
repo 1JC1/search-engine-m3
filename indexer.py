@@ -22,16 +22,10 @@ if not os.path.exists(newpath):
 os.chdir(newpath)
 
 for char in ascii_lowercase:
-    f = open(f"{char}.txt", "r")
+    f = open(f"{char}.txt", "r+")
     disk_index[char] = f
     
 os.chdir("../")
-
-def default(obj):
-    '''Encoder object to serialize Postings class as a JSON object'''
-    if hasattr(obj, 'to_json'):
-        return obj.to_json()
-    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 def dump():
     global main_index
