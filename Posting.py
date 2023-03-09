@@ -1,4 +1,3 @@
-import json
 class Posting:
     '''class object for keeping track of instances in the index'''
     def __init__(self, inputDocID = None, inputToken = None, inputFreq = 0, inputWeight = None, inputList = []) -> None:
@@ -6,7 +5,7 @@ class Posting:
         self.token = inputToken
         self.freq = inputFreq
         self.tfWeight = inputWeight
-        self.positionList = inputList
+        self.positionList = inputList[:]
         
     def get_docID(self):
         return self.docID
@@ -48,7 +47,7 @@ class Posting:
         return hash((self.docID, self.token))
 
     def __str__(self) -> str:
-        return f"Posting(inputDocID={self.docID}, inputToken={self.token}, inputFreq={self.freq}, inputList={self.positionList})"
+        return f"Posting(inputDocID={self.docID}, inputToken=\"{self.token}\", inputFreq={self.freq}, inputWeight = {self.tfWeight}, inputList={self.positionList})"
     
     def __repr__(self) -> str:
         return self.__str__()

@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-from indexer import indexer, main_index, url_index
+from indexer import indexer, main_index, url_index, index_of_index
 from collections import defaultdict
 
 def process_query(query: str):
@@ -63,7 +63,6 @@ def simple_rank(result_list):
 def search(query: str):
 
     tokens = process_query(query)
-
     token_list = [t for t in tokens if t in main_index]
     token_list.sort(key=lambda t: len(main_index[t]))
     
@@ -80,5 +79,5 @@ def search(query: str):
         result_list = main_index[token_list[0]]
 
 
-    return [url_index[id] for id in simple_rank(result_list)]
+    return [url_index[id][0] for id in simple_rank(result_list)]
 

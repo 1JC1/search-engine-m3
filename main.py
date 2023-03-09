@@ -1,23 +1,31 @@
 from search import search
-from indexer import indexer
+from indexer import indexer, create_index, create_index_of_index, open_files, close_files
 
 if __name__ == "__main__":
 
-    indexer()
+    try:
+        createIndex = True #in case we do not want to create index from scratch
 
-    while True:
-        query = input("What would you like to search? Press Q to quit.\n")
-        
-        if query.lower() == 'q':
-            break
+        if createIndex:
+            create_index()
+            indexer()
+        else:
+            open_files() #if we dont create index from scratch, we still want to open all of the files        
 
-        for url in search(query.strip()):
-            print(url)
-        '''
-              print(f"Searching for query {query}... ")
-        for count, result in enumerate(result_list, start=1):
-            print(f"{count} | {url_index[result.get_docID()]:100} | {result.get_freq()}")  
-        '''        
+        create_index_of_index()
 
-        
-        print()
+        while True:
+
+            query = input("What would you like to search? Press Q to quit.\n")
+            
+            if query.lower() == 'q':
+                break
+
+            for url in search(query.strip()):
+                print(url)
+      
+            print()
+
+    finally:
+        close_files()
+

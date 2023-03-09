@@ -3,153 +3,195 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
+from collections import OrderedDict, defaultdict
 from string import ascii_lowercase
+import hashlib
 
-"""
-psutil.virtual_memory()[2]
-"""
-
+#GLOBALS
+letter_list = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z', 'num']
 main_index = dict()
-disk_index = dict()
-index_of_index = dict()
+disk_index = dict() #has the open files to each of the letter.txt's
+index_of_index = dict() #stores all the words and its position in the disk_index
 url_index = dict()
-
 newpath = "file_index"
 
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
 
-os.chdir(newpath)
+def close_files():
+    for f in disk_index.values():
+        f.close()
 
-for char in ascii_lowercase:
-    f = open(f"{char}.txt", "w+")
-    disk_index[char] = f
+def open_files():
+    os.chdir(newpath)
+    for char in letter_list:
+        f = open(f"{char}.txt", "r") #r for reading only, wont have to write since this only gets called for 
+        disk_index[char] = f
+    os.chdir("../")
+
+def create_index():
+    global disk_index
+
+    #if file_index path does not exist, create it
+    if not os.path.exists(newpath): 
+        os.makedirs(newpath)
+
+    #change directory into new path in order to create a-z.txt's
+    os.chdir(newpath)
+
+    for char in letter_list:
+        f = open(f"{char}.txt", "w+") #w+ allows for both read and write and also the text is overritten and deleted from existing file
+        disk_index[char] = f
+        
+    os.chdir("../")
+
+
+def create_index_of_index():
+
+    global index_of_index 
     
-f = open(f"num.txt", "w+")
-disk_index["num"] = f
+    for char in letter_list: #looping through every letter 
+
+        #start position at 0 and for every token, keep track of its positon in the disk_index file
+        #index_of_index key = token, value = position, for O(1) seek operation later on
+        pos = 0
+        for line in disk_index[char]:
+            line_info = line.strip().split("|")
+            token = line_info[0]
+            index_of_index[token] = pos
+            pos += len(line)
+
+
+
+
+def union_postings(postings1, postings2):
+    answer = []
+    p1 = 0
+    p2 = 0
     
-os.chdir("../")
+    while p1 < len(postings1) and p2 < len(postings2):
+
+        if postings1[p1].get_docID() < postings2[p2].get_docID():
+            answer.append(postings1[p1])
+            p1+=1
+        elif postings1[p1].get_docID() > postings2[p2].get_docID():
+            answer.append(postings2[p2])
+            p2+=1
+        else:
+            answer.append(postings2[p2])
+            p1+=1
+            p2+=1
+
+    if p1 < len(postings1):
+        answer.extend(postings1[p1:])   
+    elif p2 < len(postings2):
+        answer.extend(postings2[p2:])
+
+    return answer
+
+
+
+def merge(main_tokens, disk_file, merged_file):
+
+    p = 0
+    line = disk_file.readline()
+    if line:
+        disk_line_info = line.strip().split("|")
+        disk_token = disk_line_info[0]
+        disk_postings = eval(disk_line_info[1])
+
+    while p < len(main_tokens) and line:
+
+        if main_tokens[p] < disk_token:
+            merged_file.write(f"{main_tokens[p]}|{main_index[main_tokens[p]]}\n")
+            p+=1
+
+        elif main_tokens[p] > disk_token:
+            merged_file.write(f"{disk_token}|{disk_postings}")
+            line = disk_file.readline()
+            if line:
+                disk_line_info = line.strip().split("|")
+                disk_token = disk_line_info[0]
+                disk_postings = eval(disk_line_info[1])
+
+        else:
+
+            postings = union_postings(main_index[main_tokens[p]], disk_postings)
+            merged_file.write(f"{disk_token}|{postings}")
+
+    if p < len(main_tokens):
+        for tok in main_tokens[p:]:
+            merged_file.write(f"{tok}|{main_index[tok]}\n")
+
+    elif line:
+        while line:
+            merged_file.write(f"{disk_token}|{disk_postings}")
+            line = disk_file.readline()
+            if line:
+                disk_line_info = line.strip().split("|")
+                disk_token = disk_line_info[0]
+                disk_postings = eval(disk_line_info[1])
+
+
 
 def dump():
     global main_index
     global disk_index
     
     os.chdir(newpath)
-    
-    sorted_dict_list = sorted(main_index.keys())
-    curr = sorted_dict_list[0][0]
-    
-    if curr not in ascii_lowercase:
-        curr = "num"
-    
-    line = disk_index[curr].readline()
-    p = 0
 
-    newf = open(f"new_{curr}.txt", "w")
-
-    while line != "" or p < len(sorted_dict_list):
-        
-        if line == "" and p < len(sorted_dict_list):
-            main_token = sorted_dict_list[p]
-            main_postings = main_index[main_token]
-            newf.write(f"{main_token}|{main_postings}\n")
-            p += 1
-            if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
-                newf.close()
-                disk_index[curr].close()
-                os.remove(f"{curr}.txt")
-                os.rename(f"new_{curr}.txt", f"{curr}.txt")
-                disk_index[curr] = open(f"{curr}.txt", "r")
-                if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
-                    curr = sorted_dict_list[p][0]
-                    
-                    if curr not in ascii_lowercase:
-                        curr = "num"
-                    
-                    newf = open(f"new_{curr}.txt", "w")
-            
-        elif line != "" and p == len(sorted_dict_list):
-            line_info = line.strip().split("|")
-            disk_token = line_info[0]
-            disk_postings = eval(line_info[1])
-            newf.write(f"{disk_token}|{disk_postings}\n")
-            line = disk_index[curr].readline()
-            
-        elif line != "" and p < len(sorted_dict_list):
-            main_token = sorted_dict_list[p]
-            main_postings = main_index[main_token]
-            
-            line_info = line.strip().split("|")
-            disk_token = line_info[0]
-            disk_postings = eval(line_info[1])
-            
-            if main_token == disk_token:
-                merged_list = sorted(disk_postings + main_postings)
-                newf.write(f"{main_token}|{merged_list}\n")
-                p += 1
-                if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
-                    newf.close()
-                    disk_index[curr].close()
-                    os.remove(f"{curr}.txt")
-                    os.rename(f"new_{curr}.txt", f"{curr}.txt")
-                    disk_index[curr] = open(f"{curr}.txt", "r")
-                    if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
-                        curr = sorted_dict_list[p][0]
-                        
-                        if curr not in ascii_lowercase:
-                            curr = "num"
-                        
-                        newf = open(f"new_{curr}.txt", "w")
-                line = disk_index[curr].readline()
-                
-            elif main_token < disk_token:
-                newf.write(f"{main_token}|{main_postings}\n")
-                p += 1
-                if p == len(sorted_dict_list) or sorted_dict_list[p][0] != curr:
-                    newf.close()
-                    disk_index[curr].close()
-                    os.remove(f"{curr}.txt")
-                    os.rename(f"new_{curr}.txt", f"{curr}.txt")
-                    disk_index[curr] = open(f"{curr}.txt", "r")
-                    if p < len(sorted_dict_list) and sorted_dict_list[p][0] != curr:
-                        curr = sorted_dict_list[p][0]
-                        
-                        if curr not in ascii_lowercase:
-                            curr = "num"
-                        
-                        newf = open(f"new_{curr}.txt", "w")
-                        
-            elif main_token > disk_token:
-                newf.write(f"{disk_token}|{disk_postings}\n")
-                line = disk_index[curr].readline()
+    main_token_bins = defaultdict(list)
+    for tok in sorted(main_index.keys()):
+        if tok[0] not in ascii_lowercase:
+            main_token_bins['num'].append(tok)
+        else:
+            main_token_bins[tok[0]].append(tok)
     
+    #main_token_bins have the tokens in their respective letter, also in alphabetical order
+
+    for curr, curr_token_list in main_token_bins.items():
+        #curr is the current letter and curr_token_list is the tokens from main_index for that
+        #now we merge disk_index[curr] and curr_token_list in merge() function
+
+        newf = open(f"new_{curr}.txt", "w")
+
+        merge(curr_token_list, disk_index[curr], newf)
+
+        newf.close()
+
+        os.remove(f"{curr}.txt")
+        os.rename(f"new_{curr}.txt", f"{curr}.txt")
+
+    
+    main_index.clear()
     os.chdir("../")
-    
-    main_index = dict()
 
-def create_index_of_index():
-    global index_of_index
-    
-    for char in ascii_lowercase:
-        line = disk_index[char].readline()
-        pos = 0
+
+def simhashSimilarity(simhash_info: dict[str: list[int, str]], url: str) -> tuple[int, str or None]:
+
+    simhash = [0]*128
+    for i in range(128):
+        for weight, hash_val in simhash_info.values():
+            if hash_val[i] == '1':
+                simhash[i] += weight
+            else:
+                simhash[i] -= weight
         
-        while line != "":
-            line_info = line.strip().split("|")
-            token = line_info[0]
-            index_of_index[token] = pos
-            pos += len(line)
-            line = disk_index[char].readline()
-            
-    line = disk_index["num"].readline()
-    pos = 0
+        if simhash[i] < 0:
+            simhash[i] = '0'
+        else:
+            simhash[i] = '1'
     
-    while line != "":
-        line_info = line.strip().split("|")
-        token = line_info[0]
-        index_of_index[token] = pos
-        pos += len(line)
-        line = disk_index["num"].readline()
+    simhash = ''.join(simhash)
+
+    for cururl, curhash in url_index.values():
+
+        similarity = bin(int(simhash, 2)^int(curhash, 2))[2:].zfill(128).count('0')/128.0    
+
+        if (similarity >= 0.92): #THRESHOLD (118+ similar bits out of 128 (10 bit difference))
+
+            return False, None
+        
+    return True, simhash
+
 
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
@@ -174,6 +216,7 @@ def indexer():
                 # opening each file in subdirectories and parsing data
                 if os.path.splitext(file)[1] == '.json':
                     file_index = dict()
+                    simhash_info = dict()
                     wordPosition = 0
                     
                     with open(dir + '/' + file) as f:
@@ -202,25 +245,40 @@ def indexer():
                                 
                                 # creating a Posting object to easily access docID and frequencies of tokens
                                 # & putting the Posting objects into the main_index
+
+                                #creating features for simhash: getting the token frequency for each document
+                                #sinhash_info: dictionary with key as token and value as a 2-list of frequency in document and token's hash value
+                                if stem not in simhash_info:
+                                    simhash_info[stem] = [1,bin(int(hashlib.md5(stem.encode()).hexdigest(), 16))[2:].zfill(128)] # 128 bit md5 hash
+                                else:
+                                    simhash_info[stem][0] += 1
+
                                 if stem not in file_index:
+                                    # main_index[stem][docID] = Posting()
                                     file_index[stem] = Posting(docID, stem)
-                                    
-                                file_index[stem].increment_freq()
-                                file_index[stem].add_position(wordPosition)
+                                else:
+                                    # main_index[stem][docID].increment_freq()
+                                    file_index[stem].increment_freq()
+                                    file_index[stem].add_position(wordPosition)
                                 
                                 wordPosition += 1
-                
-        
-                    # adding docIDs, frequencies, and URLs to dict and defaultdict
-                    for stem, post in file_index.items():
-                        if stem not in main_index:
-                            main_index[stem] = []
-                        post.set_tfWeight(1 + math.log10(post.get_freq()))
-                        bisect.insort(main_index[stem], post)
-                                
-                    url_index[docID] = data['url']
-                        
-                    docID += 1
+
+                    #sending in the simhash_info to calculate simhash and check for near duplicates
+                    #if there exists a near duplicate, we make add_doc to False and we don't add the doc
+                    #if there is no near duplicate, we make add_doc to True and return the simhash for the current document to store
+                    add_doc, simhash = simhashSimilarity(simhash_info, data['url'])
+
+                    if add_doc:
+                        # adding docIDs, frequencies, and URLs to dict and defaultdict
+                        for stem, post in file_index.items():
+                            if stem not in main_index:
+                                main_index[stem] = []
+                            #post.set_tfWeight(1 + math.log10(post.get_freq()))
+                            bisect.insort(main_index[stem], post)
+                                    
+                        url_index[docID] = (data['url'], simhash)
+                            
+                        docID += 1
                     
                     if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
                         os.chdir("../search-engine-m3")
@@ -233,25 +291,6 @@ def indexer():
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
     os.chdir("../search-engine-m3")
     
-    # dumping main_index into a json
-    # with open("main_index.json", 'w') as f:
-    #     json.dump(main_index, f, default=default)
-    #     print("File index made")
     if len(main_index) > 0:
         dump()
     
-    # with open("url_index.json", "w") as f:
-    #     json.dump(url_index, f, default=default)
-    #     print("URL index made")
-    
-    # print(f"Number of documents: {docID + 1}")
-    # print(f"Number of tokens: {len(main_index)}")
-    # print(f"Size of index: {sys.getsizeof(main_index)}")
-
-    # print('main index:')
-    # print(main_index)
-    # print('url index')
-    # print(url_index)  
-    
-if __name__ == "__main__":
-    indexer()
