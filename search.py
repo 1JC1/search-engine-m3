@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-from indexer import indexer, main_index, url_index, index_of_index
+from indexer import indexer, main_index, url_index, index_of_index, disk_index
 from collections import defaultdict
+from string import ascii_lowercase
 
 def process_query(query: str):
     # add stopword removal / recognition
@@ -59,11 +60,28 @@ def simple_rank(result_list):
     return sorted(rel_score, key=lambda x : rel_score[x], reverse=True)[0:5] 
     
 
+def repopulate_main(tokens):
+    global main_index
+    global disk_index
+    
+    for tok in tokens:
+        if tok[0] not in ascii_lowercase:
+            disk_index["num"].seek(index_of_index[tok])
+            line_info = disk_index["num"].readline().strip().split("|")
+            main_index[tok] = eval(line_info[1])
+            disk_index["num"].seek(0)
+        else:
+            disk_index[tok[0]].seek(index_of_index[tok])
+            line_info = disk_index[tok[0]].readline().strip().split("|")
+            main_index[tok] = eval(line_info[1])
+            disk_index[tok[0]].seek(0)
+    
     
 def search(query: str):
 
     tokens = process_query(query)
-    token_list = [t for t in tokens if t in main_index]
+    token_list = [t for t in tokens if t in index_of_index]
+    repopulate_main(token_list)
     token_list.sort(key=lambda t: len(main_index[t]))
     
     result_list = []
