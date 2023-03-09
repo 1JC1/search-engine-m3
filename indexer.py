@@ -47,14 +47,14 @@ def tags(soup, token_nested_dict):
         tokenize(bolded, 'bold', token_nested_dict, 4)
     #emphasized
     for em in soup.findall('em'):
-        tokenize(em, 'em', token_nested_dict, )
+        tokenize(em, 'em', token_nested_dict, 2)
     #italics
     for italics in soup.findall('i'):
-        tokenize(italics, 'i', token_nested_dict, )
+        tokenize(italics, 'i', token_nested_dict, 2)
     #anchor tags
-    for anchor in soup.findall('a', href=True): # only gets the URL
-        anchor_dict[anchor]
-        tokenize(anchor, 'a')
+    for anchor in soup.findall('a'): 
+        tokenize(anchor, 'a', token_nested_dict, 3)
+        anchor_dict[anchor.get('href')]
     
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
@@ -98,6 +98,7 @@ def indexer():
                         tags(soup, token_nested_dict)
                         tokens = word_tokenize(soup.get_text())
                         
+                        print("token nested dict:/n", token_nested_dict)
                         # tokenizing alphanumerically
                         for token in tokens:
                             alphanum = re.sub(r'[^a-zA-Z0-9]', '', token)
@@ -127,7 +128,8 @@ def indexer():
                     url_index[docID] = data['url']
                         
                     docID += 1
-
+                    
+                print("Anchor Dict:/n", anchor_dict)
             print(f'Directory {dir} done\n')
             # break
 
