@@ -105,10 +105,10 @@ def merge(main_tokens, disk_file, merged_file):
 
         if main_tokens[p] < disk_token:
             merged_file.write(f"{main_tokens[p]}|{main_index[main_tokens[p]]}\n")
-            p+=1
+            p += 1
 
         elif main_tokens[p] > disk_token:
-            merged_file.write(f"{disk_token}|{disk_postings}")
+            merged_file.write(f"{disk_token}|{disk_postings}\n")
             line = disk_file.readline()
             if line:
                 disk_line_info = line.strip().split("|")
@@ -116,9 +116,14 @@ def merge(main_tokens, disk_file, merged_file):
                 disk_postings = eval(disk_line_info[1])
 
         else:
-
             postings = union_postings(main_index[main_tokens[p]], disk_postings)
-            merged_file.write(f"{disk_token}|{postings}")
+            merged_file.write(f"{disk_token}|{postings}\n")
+            p += 1
+            line = disk_file.readline()
+            if line:
+                disk_line_info = line.strip().split("|")
+                disk_token = disk_line_info[0]
+                disk_postings = eval(disk_line_info[1])
 
     if p < len(main_tokens):
         for tok in main_tokens[p:]:
@@ -126,7 +131,7 @@ def merge(main_tokens, disk_file, merged_file):
 
     elif line:
         while line:
-            merged_file.write(f"{disk_token}|{disk_postings}")
+            merged_file.write(f"{disk_token}|{disk_postings}\n")
             line = disk_file.readline()
             if line:
                 disk_line_info = line.strip().split("|")
@@ -159,9 +164,12 @@ def dump():
         merge(curr_token_list, disk_index[curr], newf)
 
         newf.close()
+        disk_index[curr].close()
 
         os.remove(f"{curr}.txt")
         os.rename(f"new_{curr}.txt", f"{curr}.txt")
+        
+        disk_index[curr] = open(f"{curr}.txt", "r")
 
     
     main_index.clear()
