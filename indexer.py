@@ -66,7 +66,7 @@ def dump():
                     if curr not in ascii_lowercase:
                         curr = "num"
                     
-                    newf = open(f"new_{curr}.txt", "w")
+                newf = open(f"new_{curr}.txt", "w")
             
         elif line != "" and p == len(sorted_dict_list):
             line_info = line.strip().split("|")
@@ -74,6 +74,13 @@ def dump():
             disk_postings = eval(line_info[1])
             newf.write(f"{disk_token}|{disk_postings}\n")
             line = disk_index[curr].readline()
+            
+            if line == "":
+                newf.close()
+                disk_index[curr].close()
+                os.remove(f"{curr}.txt")
+                os.rename(f"new_{curr}.txt", f"{curr}.txt")
+                disk_index[curr] = open(f"{curr}.txt", "r")
             
         elif line != "" and p < len(sorted_dict_list):
             main_token = sorted_dict_list[p]
@@ -100,7 +107,7 @@ def dump():
                         if curr not in ascii_lowercase:
                             curr = "num"
                         
-                        newf = open(f"new_{curr}.txt", "w")
+                    newf = open(f"new_{curr}.txt", "w")
                 
             elif main_token < disk_token:
                 newf.write(f"{main_token}|{main_postings}\n")
@@ -117,7 +124,7 @@ def dump():
                         if curr not in ascii_lowercase:
                             curr = "num"
                         
-                        newf = open(f"new_{curr}.txt", "w")
+                    newf = open(f"new_{curr}.txt", "w")
                         
             elif main_token > disk_token:
                 newf.write(f"{disk_token}|{disk_postings}\n")
