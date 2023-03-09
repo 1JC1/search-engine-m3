@@ -254,12 +254,10 @@ def indexer():
                                     simhash_info[stem][0] += 1
 
                                 if stem not in file_index:
-                                    # main_index[stem][docID] = Posting()
                                     file_index[stem] = Posting(docID, stem)
-                                else:
-                                    # main_index[stem][docID].increment_freq()
-                                    file_index[stem].increment_freq()
-                                    file_index[stem].add_position(wordPosition)
+                                
+                                file_index[stem].increment_freq()
+                                file_index[stem].add_position(wordPosition)
                                 
                                 wordPosition += 1
 
@@ -273,7 +271,7 @@ def indexer():
                         for stem, post in file_index.items():
                             if stem not in main_index:
                                 main_index[stem] = []
-                            #post.set_tfWeight(1 + math.log10(post.get_freq()))
+                            post.set_tfWeight(1 + math.log10(post.get_freq()))
                             bisect.insort(main_index[stem], post)
                                     
                         url_index[docID] = (data['url'], simhash)
