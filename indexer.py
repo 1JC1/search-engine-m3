@@ -20,12 +20,14 @@ def close_files():
     for f in disk_index.values():
         f.close()
 
+
 def open_files():
     os.chdir(newpath)
     for char in letter_list:
         f = open(f"{char}.txt", "r") #r for reading only, wont have to write since this only gets called for 
         disk_index[char] = f
     os.chdir("../")
+
 
 def create_index():
     global disk_index
@@ -45,21 +47,22 @@ def create_index():
 
 
 def create_index_of_index():
-
     global index_of_index 
     
     for char in letter_list: #looping through every letter 
 
         #start position at 0 and for every token, keep track of its positon in the disk_index file
         #index_of_index key = token, value = position, for O(1) seek operation later on
+        disk_index[char].seek(0)
+        line = disk_index[char].readline()
         pos = 0
-        for line in disk_index[char]:
+        
+        while line:
             line_info = line.strip().split("|")
             token = line_info[0]
             index_of_index[token] = pos
             pos += len(line)
-
-
+            line = disk_index[char].readline()
 
 
 def union_postings(postings1, postings2):
