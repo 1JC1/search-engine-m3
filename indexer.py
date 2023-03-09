@@ -7,7 +7,8 @@ from collections import defaultdict
 
 main_index = dict()
 url_index = dict()
-anchor_dict = dict()
+anchor_dict = defaultdict(list)
+stemmer = SnowballStemmer("english", ignore_stopwords=True)
 
 def default(obj):
     '''Encoder object to serialize Postings class as a JSON object'''
@@ -27,34 +28,44 @@ def tokenize(soup, tag, token_nested_dict, count):
         # only allowing alphanumeric characters to be stemmed
         if len(alphanum) > 0:
             stem = stemmer.stem(alphanum)
-            token_nested_dict[token][tag] += count
+            if stem not in token_nested_dict:
+                token_nested_dict[stem] = defaultdict(int)
+            token_nested_dict[stem][tag] += count
 
 def tags(soup, token_nested_dict):
     '''Searching for tags in text, creating a list of the tags, and calling tokenize() 
     to categorize tokenize each tag into a dict'''
     #title --> used to display in ui
-    for title in soup.findall('title'):
+
+    for title in soup.findAll('title'):
         tokenize(title, 'title', token_nested_dict, 6)
     #h1, h2/h3, h4/h5/h6
-    for num in str(range (0, 6)):
-        for head in soup.findall('h' + num):
+    for num in range(0, 6):
+        for head in soup.findAll('h' + str(num)):
             tokenize(head, 'h' + str(num + 1), token_nested_dict, 6 - num)
     #strong
-    for strong in soup.findall('strong'):
+    for strong in soup.findAll('strong'):
         tokenize(strong, 'strong', token_nested_dict, 6)
     #bold
-    for bolded in soup.findall('bold'):
+    for bolded in soup.findAll('bold'):
         tokenize(bolded, 'bold', token_nested_dict, 4)
     #emphasized
-    for em in soup.findall('em'):
+    for em in soup.findAll('em'):
         tokenize(em, 'em', token_nested_dict, 2)
     #italics
-    for italics in soup.findall('i'):
+    for italics in soup.findAll('i'):
         tokenize(italics, 'i', token_nested_dict, 2)
     #anchor tags
-    for anchor in soup.findall('a'): 
-        tokenize(anchor, 'a', token_nested_dict, 3)
-        anchor_dict[anchor.get('href')]
+    for anchor in soup.findAll('a'):
+
+        if anchor.get('title'):
+            for token in word_tokenize(anchor.get('title')):
+                alphanum = re.sub(r'[^a-zA-Z0-9]', '', token)
+                if len(alphanum) > 0:
+                    stem = stemmer.stem(alphanum)
+                    anchor_dict[stem].append(anchor.get('href'))
+
+
     
 def indexer():
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
@@ -64,7 +75,7 @@ def indexer():
     docID = 0
 
     # using Porter2 stemmer to stem all english words except stop words
-    stemmer = SnowballStemmer("english", ignore_stopwords=True)
+    
 
     # changing into the DEV directory and opening it
     os.chdir("../DEV")
@@ -78,7 +89,7 @@ def indexer():
                 # opening each file in subdirectories and parsing data
                 if os.path.splitext(file)[1] == '.json':
                     file_index = dict()
-                    token_nested_dict = dict(defaultdict(int))
+                    token_nested_dict = dict()
                     wordPosition = 0
                     
                     with open(dir + '/' + file) as f:
@@ -129,11 +140,12 @@ def indexer():
                         
                     docID += 1
                     
-                print("Anchor Dict:/n", anchor_dict)
+                #print("Anchor Dict:/n", anchor_dict)
             print(f'Directory {dir} done\n')
             # break
 
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
+    print(anchor_dict)
     os.chdir("../inverted-index-m1")
     
     # dumping main_index into a json
@@ -145,3 +157,5 @@ def indexer():
         json.dump(url_index, f, default=default)
         print("URL index made")
 
+if __name__ == "__main__":
+    indexer()
