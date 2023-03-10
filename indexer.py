@@ -13,7 +13,7 @@ main_index = dict()
 disk_index = dict() #has the open files to each of the letter.txt's
 index_of_index = dict() #stores all the words and its position in the disk_index
 url_index = dict()
-anchor_dict = defaultdict(list)
+anchor_dict = defaultdict(int)
 stemmer = SnowballStemmer("english", ignore_stopwords=True)
 newpath = "file_index"
 docID = 0
@@ -58,14 +58,8 @@ def tags(soup, token_nested_dict):
     for italics in soup.findAll('i'):
         tokenize(italics, token_nested_dict, 3)
     #anchor tags
-    for anchor in soup.findAll('a'):
-
-        if anchor.get('title'):
-            for token in word_tokenize(anchor.get('title')):
-                alphanum = re.sub(r'[^a-zA-Z0-9]', '', token)
-                if len(alphanum) > 0:
-                    stem = stemmer.stem(alphanum)
-                    anchor_dict[stem].append(anchor.get('href'))
+    for anchor in soup.findAll('a', href=True):
+        anchor_dict[anchor] += 1
 
 
 def close_files():
