@@ -278,6 +278,7 @@ def indexer():
                 if os.path.splitext(file)[1] == '.json':
                     file_index = dict()
                     simhash_info = dict()
+                    tag_dict = defaultdict(int)
                     wordPosition = 0
                     
                     with open(dir + '/' + file) as f:
@@ -292,6 +293,8 @@ def indexer():
 
                         # using BeautifulSoup to parse data
                         soup = BeautifulSoup(data['content'].encode(data['encoding']), 'lxml', from_encoding = data['encoding'])
+                        # finding tags in html
+                        tags(soup, tag_dict)
                         tokens = word_tokenize(soup.get_text())
                     
                         # tokenizing alphanumerically
