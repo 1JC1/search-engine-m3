@@ -19,11 +19,6 @@ stemmer = SnowballStemmer("english", ignore_stopwords=True)
 newpath = "file_index"
 docID = 0
 
-def default(obj):
-    '''Encoder object to serialize Postings class as a JSON object'''
-    if hasattr(obj, 'to_json'):
-        return obj.to_json()
-    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 def tokenize(soup, token_nested_dict, count):
     '''Used to tokenize and stem HTML tags for search revelance; puts relevant tokens into a 
@@ -410,11 +405,11 @@ def indexer():
     os.chdir(newpath)
 
     with open("url_index.json", 'w') as f:
-        json.dump(url_index, f, default=default)
+        json.dump(url_index, f)
         print("URL index made")
     
     with open("anchor_index.json", 'w') as f:
-        json.dump(anchor_index, f, default=default)
+        json.dump(anchor_index, f)
         print("Anchor index made")
     
     os.chdir("../")
