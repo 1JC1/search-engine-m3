@@ -13,7 +13,58 @@ main_index = dict()
 disk_index = dict() #has the open files to each of the letter.txt's
 index_of_index = dict() #stores all the words and its position in the disk_index
 url_index = dict()
+anchor_dict = defaultdict(list)
+stemmer = SnowballStemmer("english", ignore_stopwords=True)
 newpath = "file_index"
+
+
+def tokenize(soup, token_nested_dict, count):
+    '''Used to tokenize and stem HTML tags for search revelance; puts relevant tokens into a 
+    dictionary: token_nested_dict'''
+    # getting text to make the tag readable 
+    tokens = word_tokenize(soup.get_text())
+    # tokenizing alphanumerically
+    for token in tokens:
+        alphanum = re.sub(r'[^a-zA-Z0-9]', '', token)
+        
+        # only allowing alphanumeric characters to be stemmed
+        if len(alphanum) > 0:
+            stem = stemmer.stem(alphanum)
+            token_nested_dict[stem] += count
+
+
+def tags(soup, token_nested_dict):
+    '''Searching for tags in text, creating a list of the tags, and calling tokenize() 
+    to categorize tokenize each tag into a dict'''
+    #title --> used to display in ui
+
+    for title in soup.findAll('title'):
+        tokenize(title, token_nested_dict, 10)
+    #h1, h2/h3, h4/h5/h6
+    for num in range(0, 6):
+        for head in soup.findAll('h' + str(num)):
+            tokenize(head, token_nested_dict, 10 - num)
+    #strong
+    for strong in soup.findAll('strong'):
+        tokenize(strong, token_nested_dict, 10)
+    #bold
+    for bolded in soup.findAll('bold'):
+        tokenize(bolded, token_nested_dict, 3)
+    #emphasized
+    for em in soup.findAll('em'):
+        tokenize(em, token_nested_dict, 5)
+    #italics
+    for italics in soup.findAll('i'):
+        tokenize(italics, token_nested_dict, 3)
+    #anchor tags
+    for anchor in soup.findAll('a'):
+
+        if anchor.get('title'):
+            for token in word_tokenize(anchor.get('title')):
+                alphanum = re.sub(r'[^a-zA-Z0-9]', '', token)
+                if len(alphanum) > 0:
+                    stem = stemmer.stem(alphanum)
+                    anchor_dict[stem].append(anchor.get('href'))
 
 
 def close_files():
@@ -137,7 +188,6 @@ def merge(main_tokens, disk_file, merged_file):
                 disk_line_info = line.strip().split("|")
                 disk_token = disk_line_info[0]
                 disk_postings = eval(disk_line_info[1])
-
 
 
 def dump():
