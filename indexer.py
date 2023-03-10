@@ -386,7 +386,7 @@ def indexer():
     print("--------------------------------------------------")
     print(f"Total time to index: {(index_end - index_start)/60} min")
     print(f"Total Directories indexed: {dirNum}")
-    print(f"Total files indexed: {docID + 1}")
+    print(f"Total files indexed: {docID + 1}\n")
 
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
     os.chdir("../search-engine-m3")
@@ -404,6 +404,8 @@ def indexer():
 
     os.chdir(newpath)
 
+    print("Dumping json...")
+    
     with open("url_index.json", 'w') as f:
         json.dump(url_index, f)
         print("URL index made")

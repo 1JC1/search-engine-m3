@@ -6,14 +6,10 @@ if __name__ == "__main__":
 
     try:
         createIndex = False #in case we do not want to create index from scratch
-
         
         if createIndex:
-            start = time.time()
             create_index()
             indexer()
-            end = time.time()
-            print("--------TIME TO RUN INDEX: ", end-start, " SECONDS----------")
         else:
             open_files() #if we dont create index from scratch, we still want to open all of the files 
             load_json()
@@ -21,7 +17,6 @@ if __name__ == "__main__":
         create_index_of_index()
 
         while True:
-
             query = input("What would you like to search? Press Q to quit.\n")
             
             if query.lower() == 'q':
