@@ -16,7 +16,7 @@ def default(obj):
         return obj.to_json()
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
-def tokenize(soup, tag, token_nested_dict, count):
+def tokenize(soup, token_nested_dict, count):
     '''Used to tokenize and stem HTML tags for search revelance; puts relevant tokens into a 
     dictionary: token_nested_dict'''
     # getting text to make the tag readable 
@@ -28,9 +28,7 @@ def tokenize(soup, tag, token_nested_dict, count):
         # only allowing alphanumeric characters to be stemmed
         if len(alphanum) > 0:
             stem = stemmer.stem(alphanum)
-            if stem not in token_nested_dict:
-                token_nested_dict[stem] = defaultdict(int)
-            token_nested_dict[stem][tag] += count
+            token_nested_dict[stem] += count
 
 def tags(soup, token_nested_dict):
     '''Searching for tags in text, creating a list of the tags, and calling tokenize() 
@@ -38,23 +36,23 @@ def tags(soup, token_nested_dict):
     #title --> used to display in ui
 
     for title in soup.findAll('title'):
-        tokenize(title, 'title', token_nested_dict, 6)
+        tokenize(title, token_nested_dict, 10)
     #h1, h2/h3, h4/h5/h6
     for num in range(0, 6):
         for head in soup.findAll('h' + str(num)):
-            tokenize(head, 'h' + str(num + 1), token_nested_dict, 6 - num)
+            tokenize(head, token_nested_dict, 10 - num)
     #strong
     for strong in soup.findAll('strong'):
-        tokenize(strong, 'strong', token_nested_dict, 6)
+        tokenize(strong, token_nested_dict, 10)
     #bold
     for bolded in soup.findAll('bold'):
-        tokenize(bolded, 'bold', token_nested_dict, 4)
+        tokenize(bolded, token_nested_dict, 3)
     #emphasized
     for em in soup.findAll('em'):
-        tokenize(em, 'em', token_nested_dict, 2)
+        tokenize(em, token_nested_dict, 5)
     #italics
     for italics in soup.findAll('i'):
-        tokenize(italics, 'i', token_nested_dict, 2)
+        tokenize(italics, token_nested_dict, 3)
     #anchor tags
     for anchor in soup.findAll('a'):
 
@@ -89,7 +87,7 @@ def indexer():
                 # opening each file in subdirectories and parsing data
                 if os.path.splitext(file)[1] == '.json':
                     file_index = dict()
-                    token_nested_dict = dict()
+                    token_nested_dict = defaultdict(int)
                     wordPosition = 0
                     
                     with open(dir + '/' + file) as f:
