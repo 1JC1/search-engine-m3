@@ -328,15 +328,19 @@ def indexer():
                     add_doc, simhash = simhashSimilarity(simhash_info, data['url'])
 
                     if add_doc:
+                        weight_sum = 0
+                        
                         # adding docIDs, frequencies, and URLs to dict and defaultdict
                         for stem, post in file_index.items():
                             if stem not in main_index:
                                 main_index[stem] = []
                             html_score = 0 if stem not in tag_dict else math.log10(tag_dict[stem])
-                            post.set_tfWeight(1 + math.log10(post.get_freq()) + html_score)
+                            weight = 1 + math.log10(post.get_freq()) + html_score
+                            post.set_tfWeight(weight)
+                            weight_sum += weight
                             bisect.insort(main_index[stem], post)
                                     
-                        url_index[docID] = (data['url'], simhash)
+                        url_index[docID] = (data['url'], simhash, weight_sum)
                             
                         docID += 1
                     
