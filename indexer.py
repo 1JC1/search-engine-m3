@@ -244,7 +244,7 @@ def simhashSimilarity(simhash_info: dict[str: list[int, str]], url: str) -> tupl
     
     simhash = ''.join(simhash)
 
-    for cururl, curhash in url_index.values():
+    for cururl, curhash, currweight in url_index.values():
 
         similarity = bin(int(simhash, 2)^int(curhash, 2))[2:].zfill(128).count('0')/128.0    
 
