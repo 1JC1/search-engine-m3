@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from string import ascii_lowercase
+from timeit import default_timer as timer
 import hashlib
 
 #GLOBALS
@@ -273,19 +274,24 @@ def simhashSimilarity(simhash_info: dict[str: list[int, str]]) -> tuple[int, str
 
 
 def indexer():
-    dumpings = 0
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
         stemming and other language processing, add doc as postings to inverted index (dictionary) '''
     global main_index
     global url_index
     global docID
+    dirNum = 1
 
     # changing into the DEV directory and opening it
     os.chdir("../DEV")
     
+    print("Indexing started...\n")
+    index_start = timer()
+    
     for dir in os.listdir():
         if dir != '.DS_Store':
-            print(f'Directory {dir} started')
+            print("*************************************************")
+            print(f"Directory {dir} started\n")
+            dir_start = timer()
             
             # opening the subdirectories in dev directory
             for file in os.listdir(dir):
@@ -362,26 +368,34 @@ def indexer():
                         url_index[docID] = (data['url'].split('#', maxsplit=1)[0], simhash, weight_sum)
                             
                         docID += 1
-                    
-                    if psutil.virtual_memory()[2] >= 90:
-                        os.chdir("../search-engine-m3")
-                        dumpings+=1
-                        print("DUMP NUMBER", dumpings)
-                        dump()
-                        os.chdir("../DEV")
+                        
+            dir_end = timer()
+            print(f"Time to create main index: {dir_end - dir_start} sec")
+            print(f"Size of Main Index: {sys.getsizeof(main_index)} bytes\n")
 
-            print(f'Directory {dir} done\n')
-            # break
+            os.chdir("../search-engine-m3")
+            print("Dumping...")
+            dump_start = timer()
+            dump()
+            dump_end = timer()
+            print(f"Time to dump: {dump_end - dump_start} sec\n")
+            os.chdir("../DEV")
+
+            print(f'Directory {dir} done')
+            print("*************************************************\n")
+            
+            dirNum += 1
+
+    index_end = timer()
+    print("Indexing Completed")
+    print("--------------------------------------------------")
+    print(f"Total time to index: {(index_end - index_start)/60} min")
+    print(f"Total Directories indexed: {dirNum}")
+    print(f"Total files indexed: {docID + 1}")
 
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
     os.chdir("../search-engine-m3")
-
     
-    if len(main_index) > 0:
-        dumpings+=1
-        print("LAST DUMP, DUMP NUMBER", dumpings)
-        dump()
-
     url_set = set()
 
     for cur_url, _1, _2 in url_index.values():
