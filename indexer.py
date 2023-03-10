@@ -18,6 +18,11 @@ stemmer = SnowballStemmer("english", ignore_stopwords=True)
 newpath = "file_index"
 docID = 0
 
+def default(obj):
+    '''Encoder object to serialize Postings class as a JSON object'''
+    if hasattr(obj, 'to_json'):
+        return obj.to_json()
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 def tokenize(soup, token_nested_dict, count):
     '''Used to tokenize and stem HTML tags for search revelance; puts relevant tokens into a 
@@ -40,26 +45,26 @@ def tags(soup, token_nested_dict):
     #title --> used to display in ui
 
     for title in soup.findAll('title'):
-        tokenize(title, token_nested_dict, 10)
+        tokenize(title, token_nested_dict, 18)
     #h1, h2/h3, h4/h5/h6
     for num in range(0, 6):
         for head in soup.findAll('h' + str(num)):
-            tokenize(head, token_nested_dict, 10 - num)
+            tokenize(head, token_nested_dict, 13 - num)
     #strong
     for strong in soup.findAll('strong'):
-        tokenize(strong, token_nested_dict, 10)
+        tokenize(strong, token_nested_dict, 8)
     #bold
     for bolded in soup.findAll('bold'):
-        tokenize(bolded, token_nested_dict, 3)
+        tokenize(bolded, token_nested_dict, 5)
     #emphasized
     for em in soup.findAll('em'):
-        tokenize(em, token_nested_dict, 5)
+        tokenize(em, token_nested_dict, 3)
     #italics
     for italics in soup.findAll('i'):
-        tokenize(italics, token_nested_dict, 3)
+        tokenize(italics, token_nested_dict, 1)
     #anchor tags
     for anchor in soup.findAll('a', href=True):
-        anchor_dict[anchor] += 1
+        anchor_dict[anchor.get('href').split('#', maxsplit=1)[0]] += 1
 
 
 def close_files():
@@ -72,6 +77,24 @@ def open_files():
     for char in letter_list:
         f = open(f"{char}.txt", "r") #r for reading only, wont have to write since this only gets called for 
         disk_index[char] = f
+    os.chdir("../")
+
+
+def load_json():
+
+    global anchor_dict
+    global url_index
+
+    os.chdir(newpath)
+    with open("anchor_index.json", "r") as f:
+        anchor_dict = json.load(f)
+
+    with open("url_index.json", "r") as f:
+        url_index = json.load(f)
+
+    #converting docIDs to integers as they end up as strings when loading it from file
+    url_index = {int(id):v for id, v in url_index.items()}
+    
     os.chdir("../")
 
 
@@ -221,7 +244,7 @@ def dump():
     os.chdir("../")
 
 
-def simhashSimilarity(simhash_info: dict[str: list[int, str]], url: str) -> tuple[int, str or None]:
+def simhashSimilarity(simhash_info: dict[str: list[int, str]]) -> tuple[int, str or None]:
 
     simhash = [0]*128
     for i in range(128):
@@ -238,7 +261,7 @@ def simhashSimilarity(simhash_info: dict[str: list[int, str]], url: str) -> tupl
     
     simhash = ''.join(simhash)
 
-    for cururl, curhash in url_index.values():
+    for _1, curhash, _2 in url_index.values():
 
         similarity = bin(int(simhash, 2)^int(curhash, 2))[2:].zfill(128).count('0')/128.0    
 
@@ -250,6 +273,7 @@ def simhashSimilarity(simhash_info: dict[str: list[int, str]], url: str) -> tupl
 
 
 def indexer():
+    dumpings = 0
     '''Read through JSON file, create docID, parse content with listed encoding, tokenize,
         stemming and other language processing, add doc as postings to inverted index (dictionary) '''
     global main_index
@@ -320,7 +344,7 @@ def indexer():
                     #sending in the simhash_info to calculate simhash and check for near duplicates
                     #if there exists a near duplicate, we make add_doc to False and we don't add the doc
                     #if there is no near duplicate, we make add_doc to True and return the simhash for the current document to store
-                    add_doc, simhash = simhashSimilarity(simhash_info, data['url'])
+                    add_doc, simhash = simhashSimilarity(simhash_info)
 
                     if add_doc:
                         weight_sum = 0
@@ -335,12 +359,14 @@ def indexer():
                             weight_sum += weight
                             bisect.insort(main_index[stem], post)
                                     
-                        url_index[docID] = (data['url'], simhash, weight_sum)
+                        url_index[docID] = (data['url'].split('#', maxsplit=1)[0], simhash, weight_sum)
                             
                         docID += 1
                     
-                    if sys.getsizeof(main_index) >= (psutil.virtual_memory()[0] / 2) or psutil.virtual_memory()[2] >= 100:
+                    if psutil.virtual_memory()[2] >= 90:
                         os.chdir("../search-engine-m3")
+                        dumpings+=1
+                        print("DUMP NUMBER", dumpings)
                         dump()
                         os.chdir("../DEV")
 
@@ -349,7 +375,33 @@ def indexer():
 
     # ensuring main_index.json gets dumped in inverted-index-m1 directory instead of DEV 
     os.chdir("../search-engine-m3")
+
     
     if len(main_index) > 0:
+        dumpings+=1
+        print("LAST DUMP, DUMP NUMBER", dumpings)
         dump()
+
+    url_set = set()
+
+    for cur_url, _1, _2 in url_index.values():
+        url_set.add(cur_url)
+
+    #removing anchor urls that is not in our url_set of given files
+    anchor_index = dict()
+    for anchor_url, count in anchor_dict.items():
+        if anchor_url in url_set:
+            anchor_index[anchor_url] = count
+
+    os.chdir(newpath)
+
+    with open("url_index.json", 'w') as f:
+        json.dump(url_index, f, default=default)
+        print("URL index made")
     
+    with open("anchor_index.json", 'w') as f:
+        json.dump(anchor_index, f, default=default)
+        print("Anchor index made")
+    
+    os.chdir("../")
+

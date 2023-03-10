@@ -1,16 +1,22 @@
 from search import search
-from indexer import indexer, create_index, create_index_of_index, open_files, close_files
+from indexer import indexer, create_index, create_index_of_index, open_files, close_files, load_json
+import time 
 
 if __name__ == "__main__":
 
     try:
-        createIndex = True #in case we do not want to create index from scratch
+        createIndex = False #in case we do not want to create index from scratch
 
+        
         if createIndex:
+            start = time.time()
             create_index()
             indexer()
+            end = time.time()
+            print("--------TIME TO RUN INDEX: ", end-start, " SECONDS----------")
         else:
-            open_files() #if we dont create index from scratch, we still want to open all of the files        
+            open_files() #if we dont create index from scratch, we still want to open all of the files 
+            load_json()
 
         create_index_of_index()
 
