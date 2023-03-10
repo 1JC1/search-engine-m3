@@ -261,9 +261,6 @@ def indexer():
     global url_index
     docID = 0
 
-    # using Porter2 stemmer to stem all english words except stop words
-    stemmer = SnowballStemmer("english", ignore_stopwords=True)
-
     # changing into the DEV directory and opening it
     os.chdir("../DEV")
     
