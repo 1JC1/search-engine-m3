@@ -332,7 +332,8 @@ def indexer():
                         for stem, post in file_index.items():
                             if stem not in main_index:
                                 main_index[stem] = []
-                            post.set_tfWeight(1 + math.log10(post.get_freq()))
+                            html_score = 0 if stem not in tag_dict else math.log10(tag_dict[stem])
+                            post.set_tfWeight(1 + math.log10(post.get_freq()) + html_score)
                             bisect.insort(main_index[stem], post)
                                     
                         url_index[docID] = (data['url'], simhash)
