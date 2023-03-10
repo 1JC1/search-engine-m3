@@ -16,6 +16,7 @@ url_index = dict()
 anchor_dict = defaultdict(list)
 stemmer = SnowballStemmer("english", ignore_stopwords=True)
 newpath = "file_index"
+docID = 0
 
 
 def tokenize(soup, token_nested_dict, count):
@@ -259,7 +260,7 @@ def indexer():
         stemming and other language processing, add doc as postings to inverted index (dictionary) '''
     global main_index
     global url_index
-    docID = 0
+    global docID
 
     # changing into the DEV directory and opening it
     os.chdir("../DEV")
