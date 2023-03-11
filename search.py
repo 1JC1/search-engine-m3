@@ -10,7 +10,7 @@ from string import ascii_lowercase
 
 def process_query(query: str):
     # add stopword removal / recognition
-    tokens_to_search = []
+    tokens_to_search = defaultdict(int)
     
     stemmer = SnowballStemmer("english", ignore_stopwords=True)
     
@@ -19,7 +19,7 @@ def process_query(query: str):
         
         if len(alphanum) > 0:
             stem = stemmer.stem(alphanum)
-            tokens_to_search.append(stem)
+            tokens_to_search[stem] += 1
     
     return tokens_to_search
 
