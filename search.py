@@ -40,12 +40,11 @@ def process_query(query: str):
     
     return tokens_to_search
 
-
 def intersect(list_1, list_2, included: set):
     answer = []
     p1 = 0
     p2 = 0
-    
+
     while p1 < len(list_1) and p2 < len(list_2):
 
         if list_1[p1].get_docID() == list_2[p2].get_docID():
@@ -100,7 +99,7 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
     # Compares tf-idf scores between query and document terms using cosine similarity and returns top K docIDs with their
     # scores, where K is specified by the search_num argument.
     
-    query_weights = defaultdict(int)
+    query_weights = 0
     scores = defaultdict(int)
     
     for token in query_tokens:
@@ -108,12 +107,13 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
         q_idf = math.log10(( totalDocs / len(main_index[token]))) # idf for query # change main_index to file seeking? or other structure
         
         query_wt = q_tf_wt * q_idf # non-normalized query weight
-        query_weights[token] = query_wt
+        query_weights += query_wt ** 2
         
         for posting in union_docs:
-            scores[posting.get_docID()] += query_wt * posting.get_tfWeight()
+            if posting.get_token() == token:
+                scores[posting.get_docID()] += query_wt * posting.get_tfWeight()
              
-    query_vec_size = math.sqrt(sum([w**2 for w in query_weights.values()]))
+    query_vec_size = math.sqrt(query_weights)
  
     for dID in scores: # doing cosine normalization on all query-document scores
         scores[dID] = scores[dID] / (query_vec_size * url_index[dID][2])
