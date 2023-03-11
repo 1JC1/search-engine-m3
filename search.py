@@ -1,4 +1,4 @@
-import json, os, re, sys, heapq
+import re, math
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
@@ -6,7 +6,7 @@ from Posting import Posting
 from indexer import indexer, main_index, url_index, index_of_index, disk_index, docID
 from collections import defaultdict
 from string import ascii_lowercase
-from math import log, sqrt
+
 
 def process_query(query: str):
     # add stopword removal / recognition
@@ -22,6 +22,7 @@ def process_query(query: str):
             tokens_to_search.append(stem)
     
     return tokens_to_search
+
 
 def intersect(list_1, list_2, included: set):
     answer = []
@@ -78,8 +79,6 @@ def repopulate_main(tokens):
             disk_index[tok[0]].seek(0)
 
 
-
-
 def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num: int):
     # Compares tf-idf scores between query and document terms using cosine similarity and returns top K docIDs with their
     # scores, where K is specified by the search_num argument.
@@ -88,8 +87,8 @@ def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num:
     scores = defaultdict(int)
     
     for token in query_tokens:
-        q_tf_wt = 1 + log(query_tokens.count(token), base = 10) # weighted tf for query
-        q_idf = log(( (docID+1) / len(main_index[token])), base = 10) # idf for query # change main_index to file seeking? or other structure
+        q_tf_wt = 1 + math.log10(query_tokens.count(token)) # weighted tf for query
+        q_idf = math.log10(( (docID+1) / len(main_index[token]))) # idf for query # change main_index to file seeking? or other structure
         
         query_wt = q_tf_wt * q_idf # non-normalized query weight
         query_weights[token] = query_wt
@@ -97,7 +96,7 @@ def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num:
         for posting in union_docs:
             scores[posting.get_docID()] += query_wt * posting.get_tf()
              
-    query_vec_size = sqrt(sum([w**2 for w in query_weights]))
+    query_vec_size = math.sqrt(sum([w**2 for w in query_weights]))
     
     for dID in scores: # doing cosine normalization on all query-document scores
         scores[dID] = scores[dID] / (query_vec_size * url_index[dID][2])
@@ -105,7 +104,6 @@ def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num:
     return scores.values().sort(scores[1], reverse = True)[0:search_num] # return top K documents
 
 
-    
 def search(query: str):
 
     tokens = process_query(query)
@@ -130,4 +128,3 @@ def search(query: str):
 
 
     return [url_index[id][0] for id in simple_rank(result_list)]
-
