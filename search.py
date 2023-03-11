@@ -128,3 +128,20 @@ def search(query: str):
 
 
     return [url_index[id][0] for id in simple_rank(result_list)]
+
+def search(query: str):
+
+    tokens = process_query(query)
+
+    tokens = [t for t in tokens if t in index_of_index]
+
+    repopulate_main(tokens)
+
+    posting_list = []
+    for token in tokens:
+        posting_list.extend(main_index[token])
+    
+
+    topDocs = compare_tf_idf(tokens, posting_list, 10)
+
+    return [url_index[id] for id in topDocs]
