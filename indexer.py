@@ -354,8 +354,8 @@ def indexer():
                         for stem, post in file_index.items():
                             if stem not in main_index:
                                 main_index[stem] = []
-                            # html_score = 0 if stem not in tag_dict else math.log10(tag_dict[stem])
-                            weight = 1 + math.log10(post.get_freq() + tag_dict[stem])
+                            html_score = 0 if stem not in tag_dict else tag_dict[stem]
+                            weight = 1 + math.log10(post.get_freq() + html_score)
                             post.set_tfWeight(weight)
                             weight_sum += (weight ** 2)
                             bisect.insort(main_index[stem], post)
