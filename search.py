@@ -111,7 +111,8 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
         query_weights += (query_wt ** 2)
         
         for posting in union_docs:
-            scores[posting.get_docID()] += query_wt * posting.get_tfWeight()
+            if posting.get_token() == token:
+                scores[posting.get_docID()] += query_wt * posting.get_tfWeight()
              
     query_vec_size = math.sqrt(query_weights)
  
