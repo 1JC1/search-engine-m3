@@ -1,4 +1,3 @@
-from traitlets import default
 from search import search, init_url_anchor
 from indexer import indexer, create_index, create_index_of_index, open_files, close_files, load_json
 from collections import defaultdict
