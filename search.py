@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-from indexer import indexer, main_index, url_index, index_of_index, disk_index, docID
+from indexer import main_index, url_index, index_of_index, disk_index, docID, anchor_dict
 from collections import defaultdict
 from string import ascii_lowercase
 
@@ -19,7 +19,11 @@ def process_query(query: str):
         
         if len(alphanum) > 0:
             stem = stemmer.stem(alphanum)
-            tokens_to_search[stem] += 1
+
+            if stem in index_of_index:
+
+                tokens_to_search[stem] += 1
+
     
     return tokens_to_search
 
@@ -94,54 +98,41 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
         query_weights[token] = query_wt
         
         for posting in union_docs:
-            scores[posting.get_docID()] += query_wt * posting.get_tf()
+            scores[posting.get_docID()] += query_wt * posting.get_tfWeight()
              
-    query_vec_size = math.sqrt(sum([w**2 for w in query_weights]))
-    
+    query_vec_size = math.sqrt(sum([w**2 for w in query_weights.values()]))
+ 
     for dID in scores: # doing cosine normalization on all query-document scores
         scores[dID] = scores[dID] / (query_vec_size * url_index[dID][2])
     
     return scores.values().sort(scores[1], reverse = True)[0:search_num] # return top K documents
 
 
+
 def search(query: str):
 
-    tokens = process_query(query)
+    #NOTHING IS COMING?!?!?
+    print(anchor_dict)
+    print(url_index)
 
-    compare_tf_idf(tokens)
+    token_dict = process_query(query)
+    token_list = list(token_dict.keys())
 
-    token_list = [t for t in tokens if t in index_of_index]
     repopulate_main(token_list)
-    token_list.sort(key=lambda t: len(main_index[t]))
-    
-    result_list = []
+
+    posting_list = []
     included = set()
     
     if len(token_list) > 1:
-        result_list = intersect(main_index[token_list[0]], main_index[token_list[1]], included)
+        posting_list = intersect(main_index[token_list[0]], main_index[token_list[1]], included)
         
         for i in range(2,len(token_list)):
-            result_list = intersect(result_list, main_index[token_list[i]], included)
+            posting_list = intersect(posting_list, main_index[token_list[i]], included)
         
     elif len(token_list) == 1:
-        result_list = main_index[token_list[0]]
-
-
-    return [url_index[id][0] for id in simple_rank(result_list)]
-
-def search(query: str):
-
-    tokens = process_query(query)
-
-    tokens = [t for t in tokens if t in index_of_index]
-
-    repopulate_main(tokens)
-
-    posting_list = []
-    for token in tokens:
-        posting_list.extend(main_index[token])
+        posting_list = main_index[token_list[0]]
     
 
-    topDocs = compare_tf_idf(tokens, posting_list, 10)
+    topDocs = compare_tf_idf(token_dict, posting_list, 10)
 
     return [url_index[id] for id in topDocs]

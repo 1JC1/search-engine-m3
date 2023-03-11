@@ -91,6 +91,8 @@ def load_json():
     #converting docIDs to integers as they end up as strings when loading it from file
     url_index = {int(id):v for id, v in url_index.items()}
     
+    
+    
     os.chdir("../")
 
 

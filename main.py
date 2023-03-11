@@ -1,5 +1,5 @@
 from search import search
-from indexer import indexer, create_index, create_index_of_index, open_files, close_files, load_json
+from indexer import indexer, create_index, create_index_of_index, open_files, close_files, load_json, url_index
 import time 
 
 if __name__ == "__main__":
