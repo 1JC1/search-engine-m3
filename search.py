@@ -79,7 +79,7 @@ def repopulate_main(tokens):
             disk_index[tok[0]].seek(0)
 
 
-def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num: int):
+def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'), search_num: int):
     # Compares tf-idf scores between query and document terms using cosine similarity and returns top K docIDs with their
     # scores, where K is specified by the search_num argument.
     
@@ -87,7 +87,7 @@ def compare_tf_idf(query_tokens: list, union_docs: list('Postings'), search_num:
     scores = defaultdict(int)
     
     for token in query_tokens:
-        q_tf_wt = 1 + math.log10(query_tokens.count(token)) # weighted tf for query
+        q_tf_wt = 1 + math.log10(query_tokens[token]) # weighted tf for query
         q_idf = math.log10(( (docID+1) / len(main_index[token]))) # idf for query # change main_index to file seeking? or other structure
         
         query_wt = q_tf_wt * q_idf # non-normalized query weight
