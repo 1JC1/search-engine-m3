@@ -1,0 +1,22 @@
+1. Irvine
+2. Assignment 2
+3. Master of Software Engineering
+4. Selena
+5. Thornton
+6. Reddit
+7. testing
+8. School of
+9. School of ics
+10. Cristina Lopes
+11. Machine learning
+12. ACM
+13. Z A
+14. Computer Science
+15. Uci ics school
+16. Party uci
+17. Informatics degree
+18. Statistic
+19. Thornton course
+20. Congratulations
+
+Terms like Irvine and Assignment 2 showed less relevant links because of our initial weighting of HTML, which prioritized HTML in titles too heavily. Longer terms like Master of Software Engineering also had efficiency issues, which we attempted to resolve by improving our cosine similarity function. We made it more optimal by creating efficient dumping and loading as well as efficiecnt functions and structures at lower time.
