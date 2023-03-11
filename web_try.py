@@ -22,27 +22,10 @@ def results_page(query: str):
     if request.method == 'POST':
         query = request.form['search']
         return redirect(url_for('results_page', query=query))
-    else:  
-        try:       
-            createIndex = False #in case we do not want to create index from scratch
-            
-            if createIndex:
-                create_index()
-                url_index, anchor_dict = indexer()
-            else:
-                open_files() #if we dont create index from scratch, we still want to open all of the files 
-                url_index, anchor_dict = load_json()
-    
-            create_index_of_index()
-    
-            init_url_anchor(url_index, anchor_dict)
-    
-            search_start = timer()
-            search_results = search(query.strip())
-            search_end = timer()
-    
-        finally:
-            close_files()
+    else:     
+        search_start = timer()
+        search_results = search(query.strip())
+        search_end = timer()
 
     tagged_urls = [f"<li><a href=\"{u}\">{u}</a></li>" for u in search_results]
     url_list = "<ol>" + ''.join(tagged_urls) + "</ol>"
@@ -50,3 +33,25 @@ def results_page(query: str):
     return f"<form method='POST'><input type=\"text\" name=\"search\" placeholder=\"{query}\"> \
     <button type=\"submit\" name=\"submit_button\" >Search</button> <lb> \
     </form> <br><small>({search_end - search_start} seconds)</small> {url_list}"
+    
+if __name__ == "__main__":
+    try:       
+        createIndex = False #in case we do not want to create index from scratch
+        
+        if createIndex:
+            create_index()
+            url_index, anchor_dict = indexer()
+        else:
+            open_files() #if we dont create index from scratch, we still want to open all of the files 
+            url_index, anchor_dict = load_json()
+    
+        create_index_of_index()
+    
+        init_url_anchor(url_index, anchor_dict)
+    
+        app.run()
+    
+    finally:
+        close_files()
+    
+        
