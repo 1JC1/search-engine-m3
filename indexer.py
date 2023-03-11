@@ -360,7 +360,7 @@ def indexer():
                             weight_sum += (weight ** 2)
                             bisect.insort(main_index[stem], post)
                                     
-                        url_index[docID] = (data['url'].split('#', maxsplit=1)[0], simhash, weight_sum)
+                        url_index[docID] = (data['url'].split('#', maxsplit=1)[0], simhash, math.sqrt(weight_sum))
                             
                         docID += 1
                         
