@@ -1,7 +1,7 @@
 from search import search, init_url_anchor
 from indexer import indexer, create_index, create_index_of_index, open_files, close_files, load_json
 from collections import defaultdict
-import time 
+from timeit import default_timer as timer
 
 
 if __name__ == "__main__":
@@ -26,11 +26,15 @@ if __name__ == "__main__":
             
             if query.lower() == 'q':
                 break
-
-            for url in search(query.strip()):
+            
+            search_start = timer()
+            search_results = search(query.strip())
+            search_end = timer()
+            
+            for url in search_results:
                 print(url)
       
-            print()
+            print(f"Query took {search_end - search_start} sec")
 
     finally:
         close_files()
