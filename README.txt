@@ -1,9 +1,9 @@
 Hi! Here you will find how to use our software.
 
 How to run the code that creates the index:
-The code in the index is in the index.py file within the indexer() function. 
-Luckily, it is easy to call the indexer through the main.py file, so the user
-will call "python3 main.py" in the terminal and our code will run.
+The code that runs the index is in the index.py file that starts in the indexer() function. 
+However, to run the index, you have to run main.py and set the createIndex to True (it is set to False by default). 
+So the user will call "python3 main.py" in the terminal and our code will run.
 
 
 How to start the search interface:
