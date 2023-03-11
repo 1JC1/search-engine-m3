@@ -1,11 +1,11 @@
-import json
 class Posting:
     '''class object for keeping track of instances in the index'''
-    def __init__(self, inputDocID, inputToken) -> None:
+    def __init__(self, inputDocID = None, inputToken = None, inputFreq = 0, inputWeight = None, inputList = []) -> None:
         self.docID = inputDocID
-        self.freq = 0
-        self.positionList = []
         self.token = inputToken
+        self.freq = inputFreq
+        self.tfWeight = inputWeight
+        self.positionList = inputList[:]
         
     def get_docID(self):
         return self.docID
@@ -13,14 +13,26 @@ class Posting:
     def get_freq(self):
         return self.freq
     
+    def get_token(self):
+        return self.token
+    
+    def get_tfWeight(self):
+        return self.tfWeight
+    
     def get_positionList(self):
         return self.positionList
         
-    def increment_freq(self):
-        self.freq += 1
-    
     def set_docID(self, newDocID):
         self.docID = newDocID
+        
+    def set_token(self, newToken):
+        self.token = newToken
+        
+    def set_tfWeight(self, newWeight):
+        self.tfWeight = newWeight
+        
+    def increment_freq(self):
+        self.freq += 1
         
     def add_position(self, index):
         self.positionList.append(index)
@@ -35,12 +47,7 @@ class Posting:
         return hash((self.docID, self.token))
 
     def __str__(self) -> str:
-        return f"Posting(freq: {self.freq})"
+        return f"Posting(inputDocID={self.docID}, inputToken=\"{self.token}\", inputFreq={self.freq}, inputWeight = {self.tfWeight}, inputList={self.positionList})"
     
     def __repr__(self) -> str:
-        return f"(freq: {self.freq})"
-    
-    # allows use of json.dump into main_index.json
-    def to_json(self):
-        # return json.dumps(dict(self), ensure_ascii=False)
-        return json.dumps(self, default=lambda o: o.__dict__)
+        return self.__str__()
