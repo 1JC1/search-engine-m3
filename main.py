@@ -24,7 +24,7 @@ if __name__ == "__main__":
         while True:
             query = input("What would you like to search? Press Q to quit.\n")
             
-            print(s)
+            print()
             
             if query.lower() == 'q':
                 break
