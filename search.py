@@ -3,9 +3,22 @@ from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from Posting import Posting
-from indexer import main_index, url_index, index_of_index, disk_index, docID, anchor_dict
+from indexer import main_index, index_of_index, disk_index
 from collections import defaultdict
 from string import ascii_lowercase
+
+anchor_dict = defaultdict(int)
+url_index = dict()
+totalDocs = 0
+
+
+def init_url_anchor(inUrlIndex, inAnchorDict):
+    global anchor_dict
+    global url_index
+    global totalDocs
+    url_index = inUrlIndex
+    anchor_dict = inAnchorDict
+    totalDocs = len(url_index)
 
 
 def process_query(query: str):
@@ -92,7 +105,7 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
     
     for token in query_tokens:
         q_tf_wt = 1 + math.log10(query_tokens[token]) # weighted tf for query
-        q_idf = math.log10(( (docID+1) / len(main_index[token]))) # idf for query # change main_index to file seeking? or other structure
+        q_idf = math.log10(( totalDocs / len(main_index[token]))) # idf for query # change main_index to file seeking? or other structure
         
         query_wt = q_tf_wt * q_idf # non-normalized query weight
         query_weights[token] = query_wt
@@ -104,16 +117,14 @@ def compare_tf_idf(query_tokens: defaultdict(int), union_docs: list('Postings'),
  
     for dID in scores: # doing cosine normalization on all query-document scores
         scores[dID] = scores[dID] / (query_vec_size * url_index[dID][2])
+
+
+    return sorted(scores, key=lambda x : scores[x], reverse=True)[0:search_num]
     
-    return scores.values().sort(scores[1], reverse = True)[0:search_num] # return top K documents
 
 
 
 def search(query: str):
-
-    #NOTHING IS COMING?!?!?
-    print(anchor_dict)
-    print(url_index)
 
     token_dict = process_query(query)
     token_list = list(token_dict.keys())
@@ -135,4 +146,4 @@ def search(query: str):
 
     topDocs = compare_tf_idf(token_dict, posting_list, 10)
 
-    return [url_index[id] for id in topDocs]
+    return [url_index[id][0] for id in topDocs]

@@ -78,22 +78,20 @@ def open_files():
 
 def load_json():
 
-    global anchor_dict
-    global url_index
-
     os.chdir(newpath)
     with open("anchor_index.json", "r") as f:
+        global anchor_dict
         anchor_dict = json.load(f)
 
     with open("url_index.json", "r") as f:
+        global url_index
         url_index = json.load(f)
 
     #converting docIDs to integers as they end up as strings when loading it from file
     url_index = {int(id):v for id, v in url_index.items()}
     
-    
-    
     os.chdir("../")
+    return url_index, anchor_dict
 
 
 def create_index():
@@ -417,4 +415,6 @@ def indexer():
         print("Anchor index made")
     
     os.chdir("../")
+
+    return url_index, anchor_dict
 
