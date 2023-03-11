@@ -1,4 +1,4 @@
-import json, os, re, sys, bisect, psutil, math
+import json, os, re, sys, bisect, math
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
