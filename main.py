@@ -34,7 +34,7 @@ if __name__ == "__main__":
             for url in search_results:
                 print(url)
       
-            print(f"\nQuery took {search_end - search_start} sec")
+            print(f"\Search took {search_end - search_start} sec")
 
     finally:
         close_files()
